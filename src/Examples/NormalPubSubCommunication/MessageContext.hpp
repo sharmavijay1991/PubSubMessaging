@@ -7,9 +7,15 @@ using namespace std;
 
 class MessageContext
 {
-    zmq::context_t context;
+    zmq::context_t * context;
+    void createMessageContext();
 
     public:
-        static MessageContext& getStaticMessageContext();
-        //TODO: object creation and return of singleton object.
-}
+        MessageContext();
+        zmq::context_t & getStaticMessageContext();
+
+
+        ~MessageContext() {
+            delete context;
+        }
+};

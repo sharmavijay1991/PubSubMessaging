@@ -4,7 +4,7 @@ PubSubProxy::stop = 0;
 
 PubSubProxy::PubSubProxy() {
     stop = 0;
-    MessageContext &context = MessageContext::getStaticMessageContext();
+    //MessageContext & context = MessageContext::getStaticMessageContext();
     loadAddress();
 }
 
@@ -62,6 +62,7 @@ bool PubSubProxy::start()
 
 bool PubSubProxy::runZMQProxy()
 {
+    zmq::context_t & context = msg_context.getStaticMessageContext();
     zmq::socket_t pub(context.getZMQContext(), ZMQ_XPUB);
     pub.bind(pub_bind_address);
     zmq::socket_t sub(context.getZMQContext(), ZMQ_XSUB);
