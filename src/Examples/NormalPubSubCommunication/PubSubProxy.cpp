@@ -1,6 +1,6 @@
 #include <PubSubProxy.hpp>
 
-PubSubProxy::stop = 0;
+bool PubSubProxy::stop = 0;
 
 PubSubProxy::PubSubProxy() {
     stop = 0;
@@ -13,7 +13,7 @@ void PubSubProxy::registerSigHandler()
     signal(SIGIO, PubSubProxy::sigHandler);
 }
 
-static void PubSubProxy::sigHandler(int signal)
+void PubSubProxy::sigHandler(int signal)
 {
     stop = 1;
 }
@@ -57,22 +57,23 @@ void PubSubProxy::loadAddress() {
 
 bool PubSubProxy::start()
 {
-    proxy_thread.reset(new thread(PubSubProxy::runZMQProxy(), this));
+    thread th(&PubSubProxy::runZMQProxy, this);
+    proxy_thread = std::move(th);
+    return true;
 }
 
-bool PubSubProxy::runZMQProxy()
+void PubSubProxy::runZMQProxy()
 {
     zmq::context_t & context = msg_context.getStaticMessageContext();
-    zmq::socket_t pub(context.getZMQContext(), ZMQ_XPUB);
+    zmq::socket_t pub(context, ZMQ_XPUB);
     pub.bind(pub_bind_address);
-    zmq::socket_t sub(context.getZMQContext(), ZMQ_XSUB);
+    zmq::socket_t sub(context, ZMQ_XSUB);
     sub.bind(sub_bind_address);
-    zmq::socket_t controller(context.getZMQContext(), ZMQ_SUB);
+    zmq::socket_t controller(context, ZMQ_SUB);
     controller.connect(control_path);
-    controller..setsockopt( ZMQ_SUBSCRIBE, "", 0 );
+    controller.setsockopt( ZMQ_SUBSCRIBE, "", 0 );
     zmq::proxy_steerable(pub, sub, NULL, controller);       //blocking call
-    return true;
-
+    return;
 }
 
 void PubSubProxy::maintainProxy()
